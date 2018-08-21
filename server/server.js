@@ -17,6 +17,10 @@ app.use(bodyParser.json())
 
 const port = process.env.PORT
 
+let formatDate = (timestamp) => {
+	return moment().format('HH:mm:ss, D/MM/YYYY')
+}
+
 app.get('/', (req, res) => {
 	res.send('Ta funcionando')
 })
@@ -25,12 +29,11 @@ app.get('/', (req, res) => {
 app.post('/logs', (req, res) => {
 	//Pra transformar de string para um objeto
 	
-	console.log(req.body._id)
+	console.log(req.body.portariaID)
 
 	let log = new Log({
-		logID: ObjectID(),
-		portariaID: req.body._id,
-		createdAt: moment().valueOf()
+		portariaID: req.body.portariaID,
+		createdAt: moment().valueOf(),
 	})
 	log.save().then((log) => {
 		res.send(log)
@@ -41,7 +44,10 @@ app.post('/logs', (req, res) => {
 
 //Método para pegar todos os logs
 app.get('/logs', (req, res) => {
-	Log.find({}).then((logs) => {
+	Log.find({}).lean().then((logs) => {
+		logs.forEach((log) => {
+			log.date = formatDate(log.createdAt)
+		})
 		res.send({logs})
 	}, (err) => {
 		res.status(400).send(err)
@@ -53,7 +59,10 @@ app.get('/logs', (req, res) => {
 app.get('/logs/:id', (req,res) => {
 	Log.find({
 		portariaID: req.params.id
-	}).then((logs) => {
+	}).lean().then((logs) => {
+		logs.forEach((log) => {
+			log.date = formatDate(log.createdAt)
+		})
 		res.send({logs})
 	}, (err) => {
 		res.status(400).send(err)
