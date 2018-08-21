@@ -19,7 +19,7 @@ const port = process.env.PORT
 
 let formatDate = (timestamp) => {
 	moment().utcOffset(-3)
-	return moment(timestamp).format('HH:mm:ss, D/MM/YYYY').zone(-3)
+	return moment(timestamp).format('HH:mm:ss, D/MM/YYYY')
 }
 
 app.get('/', (req, res) => {
