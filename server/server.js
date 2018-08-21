@@ -18,7 +18,8 @@ app.use(bodyParser.json())
 const port = process.env.PORT
 
 let formatDate = (timestamp) => {
-	return moment(timestamp).format('HH:mm:ss, D/MM/YYYY')
+	moment().utcOffset(-3)
+	return moment(timestamp).format('HH:mm:ss, D/MM/YYYY').zone(-3)
 }
 
 app.get('/', (req, res) => {
