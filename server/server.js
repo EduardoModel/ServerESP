@@ -28,12 +28,10 @@ app.get('/', (req, res) => {
 //Método para postar os logs
 app.post('/logs', (req, res) => {
 	//Pra transformar de string para um objeto
-	
-	console.log(req.body.portariaID)
 
 	let log = new Log({
 		portariaID: req.body.portariaID,
-		createdAt: moment().valueOf(),
+		createdAt: moment().valueOf()
 	})
 	log.save().then((log) => {
 		res.send(log)
@@ -52,6 +50,36 @@ app.get('/logs', (req, res) => {
 	}, (err) => {
 		res.status(400).send(err)
 	})	
+})
+
+//Método para postar o botão do pânico
+app.post('/logs/panic', (req,res) => {
+	let log = new Log({
+		portariaID: req.body.portariaID,
+		createdAt: moment().valueOf(),
+		mode: 'Pânico'	//Modo 2 é para o pânico
+	})
+	log.save().then((log) => {
+		res.send(log)
+	}, (err) => {
+		res.status(400).send(err)
+	})
+})
+
+app.get('/logs/panic', (req,res) => {
+	let panicLogs = []
+	Log.find({
+		mode: 'Pânico'
+	}).lean().then((logs) => {
+		logs.forEach((log) => {
+			if((log.createdAt - moment().subtract({seconds: 30})) > 0){
+				panicLogs.push(log)
+			}
+		})
+		res.send(panicLogs)
+	}, (err) => {
+		res.status(400).send(err)
+	})
 })
 
 

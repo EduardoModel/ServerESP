@@ -10,6 +10,11 @@ let Log = mongoose.model('Log', {
 		type: Number,
 		default: null,	//<---  validator
 		required: true
+	},
+	mode: {
+		type: String,
+		default: 'Giroled',	//que é o giroled
+		required: true
 	}
 })
 
