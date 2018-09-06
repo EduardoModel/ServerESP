@@ -3,7 +3,9 @@ let mongoose = require('mongoose')
 //define o corpo dos objetos que serão armazenados dentro da coleção
 let Log = mongoose.model('Log', {
 	portariaID: {
-		type: Number,
+		type: String,
+		minlength: 3,
+		maxlength:3,
 		required: true
 	},
 	createdAt: {
@@ -13,7 +15,7 @@ let Log = mongoose.model('Log', {
 	},
 	mode: {
 		type: String,
-		default: 'Giroled',	//que é o giroled
+		default: 'LigaGiroled',	//que é o giroled
 		required: true
 	}
 })

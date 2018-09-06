@@ -28,11 +28,21 @@ app.get('/', (req, res) => {
 //Método para postar os logs
 app.post('/logs', (req, res) => {
 	//Pra transformar de string para um objeto
+	let log
+	if(req.body.mode === 0){
+		log = new Log({
+			portariaID: req.body.portariaID,
+			createdAt: moment().valueOf(),
+			mode: "DesligaGiroled"
+		})
+	}
+	else{
+		log = new Log({
+			portariaID: req.body.portariaID,
+			createdAt: moment().valueOf()
+		})
+	}
 
-	let log = new Log({
-		portariaID: req.body.portariaID,
-		createdAt: moment().valueOf()
-	})
 	log.save().then((log) => {
 		res.send(log)
 	}, (err) => {
