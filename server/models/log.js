@@ -15,7 +15,7 @@ let Log = mongoose.model('Log', {
 	},
 	mode: {
 		type: String,
-		default: 'LigaGiroled',	//que é o giroled
+		default: 'L',	//que é o giroled
 		required: true
 	}
 })

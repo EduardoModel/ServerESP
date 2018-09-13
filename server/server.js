@@ -33,7 +33,7 @@ app.post('/logs', (req, res) => {
 		log = new Log({
 			portariaID: req.body.portariaID,
 			createdAt: moment().valueOf(),
-			mode: "DesligaGiroled"
+			mode: "D"
 		})
 	}
 	else{
@@ -50,8 +50,25 @@ app.post('/logs', (req, res) => {
 	})
 })
 
-//Método para pegar todos os logs
+//método que mostra quais portarias ligaram/desligaram o giroled num período de 30 segundos
 app.get('/logs', (req, res) => {
+	let giroledLogs = []
+	Log.find({
+		mode: { $in: ["L", "D"]}
+	}).lean().then((logs) => {
+		logs.forEach((log) => {
+			if((log.createdAt - moment().subtract({seconds: 30})) > 0){
+				giroledLogs.push(log)
+			}
+		})
+		res.send(giroledLogs)
+	}, (err) => {
+		res.status(400).send(err)
+	})
+})
+
+//Método para pegar todos os logs
+app.get('/alllogs', (req, res) => {
 	Log.find({}).lean().then((logs) => {
 		logs.forEach((log) => {
 			log.date = formatDate(log.createdAt)
