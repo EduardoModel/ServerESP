@@ -134,7 +134,7 @@ app.post('/ocorrencia', (req,res) => {
 	})
 })
 
-app.get('/ocorencia', async (req, res) => {
+app.get('/ocorrencia', async (req, res) => {
 	try{
 		//Busca os Logs de ligamento dos ultimos 30 segundos
 		let logsLigados = await Log.find({
