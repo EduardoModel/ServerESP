@@ -5,7 +5,7 @@ let Log = mongoose.model('Log', {
 	portariaID: {
 		type: String,
 		minlength: 3,
-		maxlength:3,
+		maxlength: 3,
 		required: true
 	},
 	createdAt: {

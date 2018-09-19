@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 
 //SUSPEITA
 //Método para postar as suspeitas
-app.post('/suspeita', (req, res) => {
+app.post('/suspeita', async (req, res) => {
 	//Pra transformar de string para um objeto
 	let log
 	if(req.body.mode === 0){
@@ -52,11 +52,13 @@ app.post('/suspeita', (req, res) => {
 		})
 	}
 
-	log.save().then((log) => {
+	try{
+		let logResposta = await log.save()
 		res.send(log)
-	}, (err) => {
+	}
+	catch(err){
 		res.status(400).send(err)
-	})
+	}
 })
 
 //método que mostra quais portarias ligaram as suspeitas
@@ -101,7 +103,7 @@ app.get('/suspeita', async (req, res) => {
 
 //OCORRENCIA
 //Método para postar ocorrencia
-app.post('/ocorrencia', (req,res) => {
+app.post('/ocorrencia', async (req,res) => {
 	let log
 	if(req.body.mode === 0){
 		log = new Log({
@@ -127,11 +129,13 @@ app.post('/ocorrencia', (req,res) => {
 		})
 	}
 
-	log.save().then((log) => {
+	try{
+		let logResposta = await log.save()
 		res.send(log)
-	}, (err) => {
+	}
+	catch(err){
 		res.status(400).send(err)
-	})
+	}
 })
 
 app.get('/ocorrencia', async (req, res) => {
@@ -174,29 +178,34 @@ app.get('/ocorrencia', async (req, res) => {
 })
 
 //Método para pegar os logs por id de portaria
-app.get('/logs/:id', (req,res) => {
-	Log.find({
-		portariaID: req.params.id
-	}).lean().then((logs) => {
+app.get('/logs/:id', async (req,res) => {
+	
+	try{
+		let logs = await Log.find({
+			portariaID: req.params.id
+		}).lean()
 		logs.forEach((log) => {
 			log.date = formatDate(log.createdAt)
 		})
-		res.send({logs})
-	}, (err) => {
+		res.send(logs)
+	}
+	catch(err){
 		res.status(400).send(err)
-	})
+	}
 })
 
 //Método para pegar todos os logs
-app.get('/alllogs', (req, res) => {
-	Log.find({}).lean().then((logs) => {
+app.get('/alllogs', async (req, res) => {
+	try{
+		let logs = await Log.find({}).lean()
 		logs.forEach((log) => {
 			log.date = formatDate(log.createdAt)
 		})
-		res.send({logs})
-	}, (err) => {
+		res.send(logs)
+	}
+	catch(err){
 		res.status(400).send(err)
-	})	
+	}
 })
 
 
