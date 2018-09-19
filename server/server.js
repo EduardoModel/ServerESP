@@ -25,8 +25,10 @@ app.get('/', (req, res) => {
 	res.send('Ta funcionando')
 })
 
-//Método para postar os logs
-app.post('/logs', (req, res) => {
+
+//SUSPEITA
+//Método para postar as suspeitas
+app.post('/suspeita', (req, res) => {
 	//Pra transformar de string para um objeto
 	let log
 	if(req.body.mode === 0){
@@ -34,6 +36,13 @@ app.post('/logs', (req, res) => {
 			portariaID: req.body.portariaID,
 			createdAt: moment().valueOf(),
 			mode: "D"
+		})
+	}
+	else if(req.body.mode === 2){
+		log = new Log({
+			portariaID: req.body.portariaID,
+			createdAt: moment().valueOf(),
+			mode: "Ack"
 		})
 	}
 	else{
@@ -50,18 +59,129 @@ app.post('/logs', (req, res) => {
 	})
 })
 
-//método que mostra quais portarias ligaram/desligaram o giroled num período de 30 segundos
-app.get('/logs', (req, res) => {
-	let giroledLogs = []
+//método que mostra quais portarias ligaram as suspeitas
+app.get('/suspeita', async (req, res) => {
+	try{
+		//Busca os Logs de ligamento dos ultimos 30 segundos
+		let logsLigados = await Log.find({
+			mode: "L",
+			tipo: "S",
+			createdAt: { $gt: moment().subtract({seconds: 30})}
+		}).lean()
+		console.log(logsLigados)
+		//Busca os Logs de desligamento dos ultuimos 30 segundos
+		let logsDesligados = await Log.find({
+			mode: "D",
+			createdAt: { $gt: moment().subtract({seconds: 30})}
+		}).lean()
+		//Itera no vetor de logs de desligamento para filtrar os logs de ligamento
+		logsDesligados.forEach((logDesligado) => {
+			logsLigados = logsLigados.filter((logLigado) => {
+				return logLigado.portariaID !== logDesligado.portariaID
+				|| logLigado.createdAt.valueOf() > logDesligado.createdAt.valueOf()
+			})
+		})
+		let logsFormatatos = []
+
+		logsLigados.forEach((logLigado) => {
+			logsFormatatos.push({
+				portariaID: logLigado.portariaID,
+				data: formatDate(logLigado.createdAt)
+			})
+		})
+
+
+		res.send(logsFormatatos)
+	}
+	catch(err){
+		res.status(400).send(err)
+	}
+})
+
+
+//OCORRENCIA
+//Método para postar ocorrencia
+app.post('/ocorrencia', (req,res) => {
+	let log
+	if(req.body.mode === 0){
+		log = new Log({
+			portariaID: req.body.portariaID,
+			createdAt: moment().valueOf(),
+			mode: "D",
+			tipo: "O"
+		})
+	}
+	else if(req.body.mode === 2){
+		log = new Log({
+			portariaID: req.body.portariaID,
+			createdAt: moment().valueOf(),
+			mode: "Ack",
+			tipo: "O"
+		})
+	}
+	else{
+		log = new Log({
+			portariaID: req.body.portariaID,
+			createdAt: moment().valueOf(),
+			tipo: "O"
+		})
+	}
+
+	log.save().then((log) => {
+		res.send(log)
+	}, (err) => {
+		res.status(400).send(err)
+	})
+})
+
+app.get('/ocorencia', async (req, res) => {
+	try{
+		//Busca os Logs de ligamento dos ultimos 30 segundos
+		let logsLigados = await Log.find({
+			mode: "L",
+			tipo: "O",
+			createdAt: { $gt: moment().subtract({seconds: 30})}
+		}).lean()
+		console.log(logsLigados)
+		//Busca os Logs de desligamento dos ultuimos 30 segundos
+		let logsDesligados = await Log.find({
+			mode: "D",
+			createdAt: { $gt: moment().subtract({seconds: 30})}
+		}).lean()
+		//Itera no vetor de logs de desligamento para filtrar os logs de ligamento
+		logsDesligados.forEach((logDesligado) => {
+			logsLigados = logsLigados.filter((logLigado) => {
+				return logLigado.portariaID !== logDesligado.portariaID
+				|| logLigado.createdAt.valueOf() > logDesligado.createdAt.valueOf()
+			})
+		})
+
+		let logsFormatatos = []
+
+		logsLigados.forEach((logLigado) => {
+			logsFormatatos.push({
+				portariaID: logLigado.portariaID,
+				data: formatDate(logLigado.createdAt)
+			})
+		})
+
+
+		res.send(logsFormatatos)
+	}
+	catch(err){
+		res.status(400).send(err)
+	}
+})
+
+//Método para pegar os logs por id de portaria
+app.get('/logs/:id', (req,res) => {
 	Log.find({
-		mode: { $in: ["L", "D"]}
+		portariaID: req.params.id
 	}).lean().then((logs) => {
 		logs.forEach((log) => {
-			if((log.createdAt - moment().subtract({seconds: 30})) > 0){
-				giroledLogs.push(log)
-			}
+			log.date = formatDate(log.createdAt)
 		})
-		res.send(giroledLogs)
+		res.send({logs})
 	}, (err) => {
 		res.status(400).send(err)
 	})
@@ -79,50 +199,6 @@ app.get('/alllogs', (req, res) => {
 	})	
 })
 
-//Método para postar o botão do pânico
-app.post('/logs/panic', (req,res) => {
-	let log = new Log({
-		portariaID: req.body.portariaID,
-		createdAt: moment().valueOf(),
-		mode: 'Pânico'	//Modo 2 é para o pânico
-	})
-	log.save().then((log) => {
-		res.send(log)
-	}, (err) => {
-		res.status(400).send(err)
-	})
-})
-
-app.get('/logs/panic', (req,res) => {
-	let panicLogs = []
-	Log.find({
-		mode: 'Pânico'
-	}).lean().then((logs) => {
-		logs.forEach((log) => {
-			if((log.createdAt - moment().subtract({seconds: 30})) > 0){
-				panicLogs.push(log)
-			}
-		})
-		res.send(panicLogs)
-	}, (err) => {
-		res.status(400).send(err)
-	})
-})
-
-
-//Método para pegar os logs por id de portaria
-app.get('/logs/:id', (req,res) => {
-	Log.find({
-		portariaID: req.params.id
-	}).lean().then((logs) => {
-		logs.forEach((log) => {
-			log.date = formatDate(log.createdAt)
-		})
-		res.send({logs})
-	}, (err) => {
-		res.status(400).send(err)
-	})
-})
 
 
 app.listen(port, () => {

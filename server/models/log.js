@@ -13,6 +13,11 @@ let Log = mongoose.model('Log', {
 		default: null,	//<---  validator
 		required: true
 	},
+	tipo:{
+		type: String,
+		default: 'S',
+		required: true
+	},
 	mode: {
 		type: String,
 		default: 'L',	//que é o giroled
@@ -21,3 +26,6 @@ let Log = mongoose.model('Log', {
 })
 
 module.exports = {Log}
+
+//suspeita -> antigo logs /suspeitas/giroleds -> pra avisar se ligou ou desligou (ack)
+//
