@@ -212,8 +212,11 @@ app.post('/deletealllogs', async (req, res) => {
 	try{
 		if(req.body.pass === process.env.PASS){
 			let log = await Log.remove({}).lean()
+			res.send('Database deletado!')
 		}
-		res.status(400).send('Database deletado!')
+		else{
+			res.send('Senha incorreta!')
+		}
 	}
 	catch(err){
 		res.status(400).send(err)
