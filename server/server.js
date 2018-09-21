@@ -179,7 +179,6 @@ app.get('/ocorrencia', async (req, res) => {
 
 //Método para pegar os logs por id de portaria
 app.get('/logs/:id', async (req,res) => {
-	
 	try{
 		let logs = await Log.find({
 			portariaID: req.params.id
@@ -208,6 +207,18 @@ app.get('/alllogs', async (req, res) => {
 	}
 })
 
+//Método para apagar todos os logs
+app.post('/deletealllogs', async (req, res) => {
+	try{
+		if(req.body.pass === process.env.PASS){
+			Log.drop()
+		}
+		 res.status(400).send('Database deletado!')
+	}
+	catch(err){
+		res.status(400).send(err)
+	}
+})
 
 
 app.listen(port, () => {
