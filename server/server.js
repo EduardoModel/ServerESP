@@ -1,15 +1,16 @@
 require('./config/config.js')
-let moment = require('moment')
-let bodyParser = require('body-parser')
+const moment = require('moment')
+const bodyParser = require('body-parser')
 
 
 const express = require('express')
 const {ObjectID} = require('mongodb')
 
 
-let {mongoose} = require('./db/mongoose.js')
+const {mongoose} = require('./db/mongoose.js')
 
-let {Log} = require('./models/log.js')
+const {Log} = require('./models/log.js')
+const {Portaria} = require('./models/portaria.js')
 
 const app = express()
 
@@ -19,6 +20,64 @@ const port = process.env.PORT
 
 let formatDate = (timestamp) => {
 	return moment(timestamp).utcOffset(-3).format('HH:mm:ss, DD/MM/YYYY')
+}
+
+let filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => {
+	let logsLigadosUnicos = []
+	//1ª Iteração no vetor de logs de desligamento para filtrar os logs ligados
+	//Para tirar as portarias que se auto-desligaram
+	logsDesligados.forEach((logDesligado) => {
+		logsLigados = logsLigados.filter((logLigado) => {
+			return logLigado.portariaID !== logDesligado.portariaID
+			|| logLigado.createdAt.valueOf() > logDesligado.createdAt.valueOf()
+		})
+	})
+
+	//Adiciona todos os logs que estão ligados
+	logsLigados.forEach((logLigado) => {
+		//Desta forma deixa que apenas um log fique armazenado
+		if(!logsLigadosUnicos.some(logLigadoUnico => logLigadoUnico.portariaID === logLigado.portariaID)){
+			logsLigadosUnicos.push({
+				portariaID: logLigado.portariaID,
+				createdAt: logLigado.createdAt
+			})
+		}
+	})
+
+	//Nesse vetor vai ser expandido os subordinados dos ligados formatados
+	let logsUnicos = logsLigadosUnicos
+
+	logsLigadosUnicos.forEach((logLigadoUnico) => {
+		//Busca a portaria pelo id do log ligado
+		let portaria = portarias.filter(portaria => portaria.portariaID === logLigadoUnico.portariaID)
+		portaria[0].subordinados.forEach((subordinado) => {
+			if(!logsUnicos.some(logUnico => logUnico.portariaID === subordinado)){
+				logsUnicos.push({
+					portariaID: subordinado,
+					createdAt: logLigadoUnico.createdAt
+				})
+			}
+		})
+	})
+
+	//2ª Iteração no vetor de logs de desligamento para filtrar os logs ligados expandidos em seus subordinados
+	logsDesligados.forEach((logDesligado) => {
+		logsUnicos = logsUnicos.filter((logUnico) => {
+			return logUnico.portariaID !== logDesligado.portariaID
+			|| logUnico.createdAt.valueOf() > logDesligado.createdAt.valueOf()
+		})
+	})
+
+	let logsFormatados = []
+
+	logsUnicos.forEach((logUnico) => {
+		logsFormatados.push({
+			portariaID: logUnico.portariaID,
+			data: formatDate(logUnico.createdAt)
+		})
+	})
+
+	callback(logsFormatados)
 }
 
 app.get('/', (req, res) => {
@@ -70,30 +129,17 @@ app.get('/suspeita', async (req, res) => {
 			tipo: "S",
 			createdAt: { $gt: moment().subtract({seconds: 30})}
 		}).lean()
-		console.log(logsLigados)
 		//Busca os Logs de desligamento dos ultuimos 30 segundos
 		let logsDesligados = await Log.find({
 			mode: "D",
 			createdAt: { $gt: moment().subtract({seconds: 30})}
 		}).lean()
-		//Itera no vetor de logs de desligamento para filtrar os logs de ligamento
-		logsDesligados.forEach((logDesligado) => {
-			logsLigados = logsLigados.filter((logLigado) => {
-				return logLigado.portariaID !== logDesligado.portariaID
-				|| logLigado.createdAt.valueOf() > logDesligado.createdAt.valueOf()
-			})
+		//Busca pelas portarias existentes
+		let portarias = await Portaria.find({}).lean()
+		//Filtra os acionamentos das portarias
+		filtraAcionamento(logsLigados, logsDesligados, portarias, (logsFormatados) => {
+			res.send(logsFormatados)
 		})
-		let logsFormatatos = []
-
-		logsLigados.forEach((logLigado) => {
-			logsFormatatos.push({
-				portariaID: logLigado.portariaID,
-				data: formatDate(logLigado.createdAt)
-			})
-		})
-
-
-		res.send(logsFormatatos)
 	}
 	catch(err){
 		res.status(400).send(err)
@@ -146,31 +192,17 @@ app.get('/ocorrencia', async (req, res) => {
 			tipo: "O",
 			createdAt: { $gt: moment().subtract({seconds: 30})}
 		}).lean()
-		console.log(logsLigados)
 		//Busca os Logs de desligamento dos ultuimos 30 segundos
 		let logsDesligados = await Log.find({
 			mode: "D",
 			createdAt: { $gt: moment().subtract({seconds: 30})}
 		}).lean()
-		//Itera no vetor de logs de desligamento para filtrar os logs de ligamento
-		logsDesligados.forEach((logDesligado) => {
-			logsLigados = logsLigados.filter((logLigado) => {
-				return logLigado.portariaID !== logDesligado.portariaID
-				|| logLigado.createdAt.valueOf() > logDesligado.createdAt.valueOf()
-			})
+		//Busca pelas portarias existentes
+		let portarias = await Portaria.find({}).lean()
+		//Filtra os acionamentos das portarias
+		filtraAcionamento(logsLigados, logsDesligados, portarias, (logsFormatados) => {
+			res.send(logsFormatados)
 		})
-
-		let logsFormatatos = []
-
-		logsLigados.forEach((logLigado) => {
-			logsFormatatos.push({
-				portariaID: logLigado.portariaID,
-				data: formatDate(logLigado.createdAt)
-			})
-		})
-
-
-		res.send(logsFormatatos)
 	}
 	catch(err){
 		res.status(400).send(err)
@@ -223,6 +255,30 @@ app.post('/deletealllogs', async (req, res) => {
 	}
 })
 
+
+//Método para cadastrar novas portarias, com seus respectivos subordinados
+app.post('/portaria', async (req, res) => {
+	try{
+		let portaria = new Portaria({
+			portariaID: req.body.portariaID,
+			subordinados: req.body.subordinados
+		})
+		let resposta = await portaria.save()
+		res.send(resposta)
+	}catch(err){
+		res.status(400).send(err)
+	}
+})
+
+//Método para retornar todas as portarias
+app.get('portarias', async (req,res) => {
+	try{
+		let portarias = await Portaria.find({}).lean()
+		res.send(portarias)
+	}catch(err){
+		res.status(400).send(err)
+	}
+})
 
 app.listen(port, () => {
 	console.log(`O app está escutando na porta ${port}!`)

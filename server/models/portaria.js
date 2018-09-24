@@ -2,12 +2,20 @@ let mongoose = require('mongoose')
 
 //define o corpo dos objetos que serão armazenados dentro da coleção
 let Portaria = mongoose.model('Portaria', {
+	portariaID: {
+		type: String,
+		required: true
+	},
+	subordinados: [{
+		type: String
+	}]
+	
+	/*
 	estado: {
 		type: String,
 		minlength: 2,
 		maxlength: 2,
 		required: true
-
 	},
 	cidade: {
 		type: String,
@@ -32,7 +40,7 @@ let Portaria = mongoose.model('Portaria', {
 			maxlength: 3,
 			required: true
 		}
-	}
+	},
 	latitude: {
 		type: Number,
 		required: true
@@ -41,6 +49,7 @@ let Portaria = mongoose.model('Portaria', {
 		type: Number,
 		required: true
 	}
+	*/
 })
 
-module.exports = {Log}
+module.exports = {Portaria}
