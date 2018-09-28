@@ -2,11 +2,15 @@
 	"test": {
 		"PORT": 3000,
 		"MONGODB_URI": "mongodb://localhost:27017/LogTest",
-		"JWT_SECRET": "RMGha3nzdw01PSPvpj6L"
+		"JWT_SECRET": "RMGha3nzdw01PSPvpj6L",
+		"PORTARIAGENESIS": "000",
+		"PASS": "ximira"
 	},
 	"development": {
 		"PORT": 3000,
 		"MONGODB_URI": "mongodb://localhost:27017/Log",
-		"JWT_SECRET": "Z6wQHQj1Nxq7WbGG9Bke"
+		"JWT_SECRET": "Z6wQHQj1Nxq7WbGG9Bke",
+		"PORTARIAGENESIS": "000",
+		"PASS": "ximira"
 	}
 }

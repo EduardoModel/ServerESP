@@ -13,16 +13,17 @@ let Log = mongoose.model('Log', {
 		default: null,	//<---  validator
 		required: true
 	},
-	tipo:{
+	evento:{ // Se é ocorrência/suspeita ...
 		type: String,
-		default: 'S',
 		required: true
-	},
+	}
+	/*, O modo agora será especificado pelo corpo do método POST realizado na url /ligados
 	mode: {
 		type: String,
 		default: 'L',	//que é o giroled
 		required: true
 	}
+	*/
 })
 
 module.exports = {Log}

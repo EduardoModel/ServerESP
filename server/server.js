@@ -1,16 +1,17 @@
 require('./config/config.js')
-const moment = require('moment')
+
+const _ = require('lodash')
 const bodyParser = require('body-parser')
-
-
 const express = require('express')
+const moment = require('moment')
 const {ObjectID} = require('mongodb')
 
 
-const {mongoose} = require('./db/mongoose.js')
-
+const {authenticate} = require('./middleware/authenticate.js')
 const {Log} = require('./models/log.js')
+const {mongoose} = require('./db/mongoose.js')
 const {Portaria} = require('./models/portaria.js')
+
 
 const app = express()
 
@@ -18,11 +19,11 @@ app.use(bodyParser.json())
 
 const port = process.env.PORT
 
-let formatDate = (timestamp) => {
+const formatDate = (timestamp) => {
 	return moment(timestamp).utcOffset(-3).format('HH:mm:ss, DD/MM/YYYY')
 }
 
-let filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => {
+const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => {
 	let logsLigadosUnicos = []
 	//1ª Iteração no vetor de logs de desligamento para filtrar os logs ligados
 	//Para tirar as portarias que se auto-desligaram
@@ -80,58 +81,64 @@ let filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => {
 	callback(logsFormatados)
 }
 
+const verificaGeneis = async (token) => {
+	try{
+		let accessPortaria = await Portaria.findByToken(token)
+		if(accessPortaria.portariaID === process.env.PORTARIAGENESIS){
+			return true
+		}
+		else{
+			return false
+		}
+	}
+	catch(err){
+		return false
+	}
+}
+
 app.get('/', (req, res) => {
 	res.send('Ta funcionando')
 })
 
-
-//SUSPEITA
-//Método para postar as suspeitas
-app.post('/suspeita', async (req, res) => {
-	//Pra transformar de string para um objeto
+//Logs
+//Método para alterar os estados de funcionamento dos giroleds
+app.post('/acionamento', authenticate, async (req, res) => {
 	let log
-	if(req.body.mode === 0){
-		log = new Log({
-			portariaID: req.body.portariaID,
-			createdAt: moment().valueOf(),
-			mode: "D"
-		})
+	let evento
+	//0 é pra desligar
+	if(req.body.evento === 0){
+		evento = 'D'
 	}
-	else if(req.body.mode === 2){
-		log = new Log({
-			portariaID: req.body.portariaID,
-			createdAt: moment().valueOf(),
-			mode: "Ack"
-		})
+	//1 é pra suspeita
+	else if(req.body.evento === 1){
+		evento = 'S'
+	}//2 é pra ocorrencia
+	else if(req.body.evento === 2){
+		evento = 'O'
+	}//3 é pro giroled enviar um ack pra comprovar o recebimento da ordem
+	else if(req.body.evento === 3){
+		evento = 'Ack'
 	}
-	else{
-		log = new Log({
-			portariaID: req.body.portariaID,
-			createdAt: moment().valueOf()
-		})
-	}
-
-	try{
-		let logResposta = await log.save()
-		res.send(log)
-	}
-	catch(err){
-		res.status(400).send(err)
-	}
+	log = new Log({
+		portariaID: req.body.portariaID,
+		createdAt: moment().valueOf(),
+		evento: evento
+	})
+	res.send(await log.save())
 })
 
+//SUSPEITA
 //método que mostra quais portarias ligaram as suspeitas
-app.get('/suspeita', async (req, res) => {
+app.get('/suspeita', authenticate, async (req, res) => {
 	try{
 		//Busca os Logs de ligamento dos ultimos 30 segundos
 		let logsLigados = await Log.find({
-			mode: "L",
-			tipo: "S",
+			evento: "S",
 			createdAt: { $gt: moment().subtract({seconds: 30})}
 		}).lean()
 		//Busca os Logs de desligamento dos ultuimos 30 segundos
 		let logsDesligados = await Log.find({
-			mode: "D",
+			evento: "D",
 			createdAt: { $gt: moment().subtract({seconds: 30})}
 		}).lean()
 		//Busca pelas portarias existentes
@@ -146,55 +153,18 @@ app.get('/suspeita', async (req, res) => {
 	}
 })
 
-
 //OCORRENCIA
-//Método para postar ocorrencia
-app.post('/ocorrencia', async (req,res) => {
-	let log
-	if(req.body.mode === 0){
-		log = new Log({
-			portariaID: req.body.portariaID,
-			createdAt: moment().valueOf(),
-			mode: "D",
-			tipo: "O"
-		})
-	}
-	else if(req.body.mode === 2){
-		log = new Log({
-			portariaID: req.body.portariaID,
-			createdAt: moment().valueOf(),
-			mode: "Ack",
-			tipo: "O"
-		})
-	}
-	else{
-		log = new Log({
-			portariaID: req.body.portariaID,
-			createdAt: moment().valueOf(),
-			tipo: "O"
-		})
-	}
-
-	try{
-		let logResposta = await log.save()
-		res.send(log)
-	}
-	catch(err){
-		res.status(400).send(err)
-	}
-})
-
-app.get('/ocorrencia', async (req, res) => {
+//método que mostra quais portarias ligaram as ocorrencias
+app.get('/ocorrencia', authenticate, async (req, res) => {
 	try{
 		//Busca os Logs de ligamento dos ultimos 30 segundos
 		let logsLigados = await Log.find({
-			mode: "L",
-			tipo: "O",
+			evento: "O",
 			createdAt: { $gt: moment().subtract({seconds: 30})}
 		}).lean()
 		//Busca os Logs de desligamento dos ultuimos 30 segundos
 		let logsDesligados = await Log.find({
-			mode: "D",
+			evento: "D",
 			createdAt: { $gt: moment().subtract({seconds: 30})}
 		}).lean()
 		//Busca pelas portarias existentes
@@ -210,7 +180,7 @@ app.get('/ocorrencia', async (req, res) => {
 })
 
 //Método para pegar os logs por id de portaria
-app.get('/logs/:id', async (req,res) => {
+app.get('/logs/:id', authenticate, async (req,res) => {
 	try{
 		let logs = await Log.find({
 			portariaID: req.params.id
@@ -226,7 +196,7 @@ app.get('/logs/:id', async (req,res) => {
 })
 
 //Método para pegar todos os logs
-app.get('/alllogs', async (req, res) => {
+app.get('/alllogs', authenticate, async (req, res) => {
 	try{
 		let logs = await Log.find({}).lean()
 		logs.forEach((log) => {
@@ -240,14 +210,42 @@ app.get('/alllogs', async (req, res) => {
 })
 
 //Método para apagar todos os logs
-app.post('/deletealllogs', async (req, res) => {
+// app.post('/deletealllogs', async (req, res) => {
+// 	try{
+// 		if(req.body.pass === process.env.PASS){
+// 			await Log.remove({}).lean()
+// 			res.send('Database deletado!')
+// 		}
+// 		else{
+// 			res.send('Senha incorreta!')
+// 		}
+// 	}
+// 	catch(err){
+// 		res.status(400).send(err)
+// 	}
+// })
+
+//Métodos referentes as portarias
+//Método para gerar a portaria genesis
+app.post('/portariagenesis', async (req, res) => {
 	try{
-		if(req.body.pass === process.env.PASS){
-			let log = await Log.remove({}).lean()
-			res.send('Database deletado!')
+		let pass = req.body.pass
+		let testeGenesis = await Portaria.findOne({portariaID: process.env.PORTARIAGENESIS})
+		if(!testeGenesis){
+			if(pass === process.env.PASS){
+				let portaria = new Portaria({
+					portariaID: process.env.PORTARIAGENESIS,
+					senha: req.body.senha
+				})
+				let genesis = await portaria.save()
+				res.send(genesis)
+			}
+			else{
+				throw "Senha para criar a genesis incorreta!"
+			}
 		}
 		else{
-			res.send('Senha incorreta!')
+			throw "Usuário gênesis já existe!"
 		}
 	}
 	catch(err){
@@ -255,17 +253,30 @@ app.post('/deletealllogs', async (req, res) => {
 	}
 })
 
-
-//Método para cadastrar novas portarias, com seus respectivos subordinados
+//Método para cadastrar portarias, através da portaria master
 app.post('/portaria', async (req, res) => {
 	try{
-		let portaria = new Portaria({
-			portariaID: req.body.portariaID,
-			subordinados: req.body.subordinados
-		})
-		let resposta = await portaria.save()
-		res.send(resposta)
-	}catch(err){
+		let accessToken = req.header('x-auth')
+		if(await verificaGeneis(accessToken)){
+			let body = _.pick(req.body, ['portariaID', 'senha', 'subordinados'])
+			//Se não existir a portaria com o id fornecido, cria ela
+			if(!await Portaria.findOne({
+				portariaID: body.portariaID
+			})){
+				//O objeto body é gerado contendo os campos portariaID e senha atrelados aos respectivos valores passados na requisição
+				let portaria = new Portaria(body)
+
+				res.send(await portaria.save())
+			}
+			else{
+				throw "Não foi possível criar a portaria. Portaria já existente!"
+			}
+		}
+		else{
+			throw "Acesso negado! Portaria não pode gerar outras portarias!"
+		}
+	}
+	catch(err){
 		res.status(400).send(err)
 	}
 })
@@ -273,9 +284,29 @@ app.post('/portaria', async (req, res) => {
 //Método para retornar todas as portarias
 app.get('portarias', async (req,res) => {
 	try{
-		let portarias = await Portaria.find({}).lean()
-		res.send(portarias)
+		let accessToken = req.header('x-auth')
+		if(verificaGeneis(accessToken)){
+			let portarias = await Portaria.find({}).lean()
+			res.send(portarias)
+		}
+		else{
+			throw "Acesso negado! Não foi possível buscar as portarias!"
+		}
 	}catch(err){
+		res.status(400).send(err)
+	}
+})
+
+//Método para a ESP fazer o login e gerar o token de acesso
+app.post('/portaria/login', async (req, res) => {
+	try{
+		let body = _.pick(req.body, ['portariaID', 'senha'])
+
+		let portaria = await Portaria.findByCredentials(body.portariaID, body.senha)
+		let token = await portaria.generateAuthToken()
+		res.header('x-auth', token).send(portaria)
+	}
+	catch(err){
 		res.status(400).send(err)
 	}
 })
