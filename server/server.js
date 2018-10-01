@@ -81,7 +81,7 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 	callback(logsFormatados)
 }
 
-const verificaGeneis = async (token) => {
+const verificaGenesis = async (token) => {
 	try{
 		let accessPortaria = await Portaria.findByToken(token)
 		if(accessPortaria.portariaID === process.env.PORTARIAGENESIS){
@@ -257,7 +257,7 @@ app.post('/portariagenesis', async (req, res) => {
 app.post('/portaria', async (req, res) => {
 	try{
 		let accessToken = req.header('x-auth')
-		if(await verificaGeneis(accessToken)){
+		if(await verificaGenesis(accessToken)){
 			let body = _.pick(req.body, ['portariaID', 'senha', 'subordinados'])
 			//Se não existir a portaria com o id fornecido, cria ela
 			if(!await Portaria.findOne({
@@ -304,7 +304,51 @@ app.post('/portaria/login', async (req, res) => {
 
 		let portaria = await Portaria.findByCredentials(body.portariaID, body.senha)
 		let token = await portaria.generateAuthToken()
-		res.header('x-auth', token).send(portaria)
+		res.header('x-auth', token).send({portariaID: portaria.portariaID, subordinados: portaria.subordinados})
+	}
+	catch(err){
+		res.status(400).send(err)
+	}
+})
+
+//Método para a genesis adicionar ou remover um subordinado
+app.patch('/portaria/subordinados', async (req, res) => {
+	try{
+		let accessToken = req.header('x-auth')
+		if(await verificaGenesis(accessToken)){
+			//pega os dados da portaria a ser atualizada junto com os novos subordinados
+			let updatePortaria = _.pick(req.body, ['portariaID', 'novosSubordinados'])
+			//busca a portaria no banco de dados
+			portaria = await Portaria.findOne({portariaID: updatePortaria.portariaID})
+			//Se o op for 0, é pra deletar elementos
+			if(req.body.op === 0){
+				//filtra os elementos que devem ser eliminados
+				updatePortaria.novosSubordinados.forEach((novoSubordinado) => {
+					portaria.subordinados = portaria.subordinados.filter((subordinado) => subordinado !== novoSubordinado)
+				})
+			}
+			//Se for 1 é pra adicionar elementos
+			else{
+				//adiciona os novos subordinados na portaria retornada
+				updatePortaria.novosSubordinados.forEach((novoSubordinado) => {
+					portaria.subordinados.push(novoSubordinado)
+				})
+			}
+			
+			// faz a atualização da portaria no banco de dados
+			let portariaAtualizada = await Portaria.update({
+				portariaID: updatePortaria.portariaID
+			},
+			{$set: {
+				subordinados: portaria.subordinados
+			}})
+			if(!portariaAtualizada){
+				res.status(404).send()
+			}
+			else{
+				res.send({portariaAtualizada})
+			}
+		}
 	}
 	catch(err){
 		res.status(400).send(err)
