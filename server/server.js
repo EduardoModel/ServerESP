@@ -228,7 +228,7 @@ app.post('/portariagenesis', async (req, res) => {
 					senha: req.body.senha
 				})
 				let genesis = await portaria.save()
-				res.send(genesis)
+				res.send({portariaID: genesis.portariaID})
 			}
 			else{
 				throw "Senha para criar a genesis incorreta!"
@@ -255,8 +255,8 @@ app.post('/portaria', async (req, res) => {
 			})){
 				//O objeto body é gerado contendo os campos portariaID e senha atrelados aos respectivos valores passados na requisição
 				let portaria = new Portaria(body)
-
-				res.send(await portaria.save())
+				await portaria.save()
+				res.send({portariaID: portaria.portariaID, subordinados: portaria.subordinados})
 			}
 			else{
 				throw "Não foi possível criar a portaria. Portaria já existente!"
