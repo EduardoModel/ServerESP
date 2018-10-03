@@ -275,7 +275,7 @@ app.post('/portaria', async (req, res) => {
 app.get('portarias', async (req,res) => {
 	try{
 		let accessToken = req.header('x-auth')
-		if(verificaGeneis(accessToken)){
+		if(await verificaGeneis(accessToken)){
 			let portarias = await Portaria.find({}).lean()
 			res.send(portarias)
 		}
