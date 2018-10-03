@@ -196,34 +196,24 @@ app.get('/logs/:id', authenticate, async (req,res) => {
 })
 
 //Método para pegar todos os logs
-app.get('/alllogs', authenticate, async (req, res) => {
+app.get('/alllogs', async (req, res) => {
 	try{
-		let logs = await Log.find({}).lean()
-		logs.forEach((log) => {
-			log.date = formatDate(log.createdAt)
-		})
-		res.send(logs)
+		let accessToken = req.header('x-auth')
+		if(await verificaGenesis(accessToken)){
+			let logs = await Log.find({}).lean()
+			logs.forEach((log) => {
+				log.date = formatDate(log.createdAt)
+			})
+			res.send(logs)
+		}
+		else{
+			throw "Acesso negado!"
+		}
 	}
 	catch(err){
 		res.status(400).send(err)
 	}
 })
-
-//Método para apagar todos os logs
-// app.post('/deletealllogs', async (req, res) => {
-// 	try{
-// 		if(req.body.pass === process.env.PASS){
-// 			await Log.remove({}).lean()
-// 			res.send('Database deletado!')
-// 		}
-// 		else{
-// 			res.send('Senha incorreta!')
-// 		}
-// 	}
-// 	catch(err){
-// 		res.status(400).send(err)
-// 	}
-// })
 
 //Métodos referentes as portarias
 //Método para gerar a portaria genesis
