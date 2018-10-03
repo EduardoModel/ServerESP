@@ -179,21 +179,21 @@ app.get('/ocorrencia', authenticate, async (req, res) => {
 	}
 })
 
-//Método para pegar os logs por id de portaria
-app.get('/logs/:id', authenticate, async (req,res) => {
-	try{
-		let logs = await Log.find({
-			portariaID: req.params.id
-		}).lean()
-		logs.forEach((log) => {
-			log.date = formatDate(log.createdAt)
-		})
-		res.send(logs)
-	}
-	catch(err){
-		res.status(400).send(err)
-	}
-})
+//Método para pegar os logs por id da portaria autenticada
+// app.get('/getlogs', authenticate, async (req,res) => {
+// 	try{
+// 		let logs = await Log.find({
+// 			portariaID: req.body.portariaID
+// 		}).lean()
+// 		logs.forEach((log) => {
+// 			log.date = formatDate(log.createdAt)
+// 		})
+// 		res.send(logs)
+// 	}
+// 	catch(err){
+// 		res.status(400).send(err)
+// 	}
+// })
 
 //Método para pegar todos os logs
 app.get('/alllogs', async (req, res) => {
@@ -201,10 +201,15 @@ app.get('/alllogs', async (req, res) => {
 		let accessToken = req.header('x-auth')
 		if(await verificaGenesis(accessToken)){
 			let logs = await Log.find({}).lean()
-			logs.forEach((log) => {
-				log.date = formatDate(log.createdAt)
+
+			logsEnviar = logs.map((log) => {
+				return {
+					portariaID: log.portariaID,
+					data: formatDate(log.createdAt),
+					evento: log.evento 
+				}
 			})
-			res.send(logs)
+			res.send(logsEnviar)
 		}
 		else{
 			throw "Acesso negado!"
