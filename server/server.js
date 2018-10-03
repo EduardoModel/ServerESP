@@ -243,7 +243,7 @@ app.post('/portariagenesis', async (req, res) => {
 	}
 })
 
-//Método para cadastrar portarias, através da portaria master
+//Método para cadastrar portarias, através da portaria genesis
 app.post('/portaria', async (req, res) => {
 	try{
 		let accessToken = req.header('x-auth')
@@ -271,13 +271,19 @@ app.post('/portaria', async (req, res) => {
 	}
 })
 
-//Método para retornar todas as portarias
-app.get('portarias', async (req,res) => {
+//Método para retornar todas as portarias para a genesis
+app.get('/portarias', async (req,res) => {
 	try{
 		let accessToken = req.header('x-auth')
-		if(await verificaGeneis(accessToken)){
+		if(await verificaGenesis(accessToken)){
 			let portarias = await Portaria.find({}).lean()
-			res.send(portarias)
+			let portariasEnviar = portarias.map((portaria) => {
+				return {
+					portariaID: portaria.portariaID,
+					subordinados: portaria.subordinados
+				}
+			})
+			res.send(portariasEnviar)
 		}
 		else{
 			throw "Acesso negado! Não foi possível buscar as portarias!"
