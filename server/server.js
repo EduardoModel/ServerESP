@@ -1,5 +1,7 @@
 require('./config/config.js')
 
+const schedule = require('node-schedule')
+
 const _ = require('lodash')
 const bodyParser = require('body-parser')
 const express = require('express')
@@ -19,10 +21,15 @@ app.use(bodyParser.json())
 
 const port = process.env.PORT
 
+
+//Funções internas do servidor
+//Método para formatar a data no formato HH:MM:SS, DD/MM/AAAA
 const formatDate = (timestamp) => {
 	return moment(timestamp).utcOffset(-3).format('HH:mm:ss, DD/MM/YYYY')
 }
 
+//Método para filtrar os acionamentos dos giroleds, evitando redundâncias
+//e selecionando os eventos que foram acionados
 const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => {
 	let logsLigadosUnicos = []
 	//1ª Iteração no vetor de logs de desligamento para filtrar os logs ligados
@@ -81,6 +88,7 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 	callback(logsFormatados)
 }
 
+//Método para verificar se o token passado é da portaria gênesis
 const verificaGenesis = async (token) => {
 	try{
 		let accessPortaria = await Portaria.findByToken(token)
@@ -95,6 +103,15 @@ const verificaGenesis = async (token) => {
 		return false
 	}
 }
+
+//Método para toda meia-noite apagar todos os tokens de acesso de todas as portarias
+schedule.scheduleJob('0 0 * * *', async () => {
+	await Portaria.updateMany({}, {
+		$set: {
+			tokens: []
+		}
+	})
+})
 
 app.get('/', (req, res) => {
 	res.send('Ta funcionando')
@@ -337,7 +354,7 @@ app.patch('/portaria/subordinados', async (req, res) => {
 			}
 			
 			// faz a atualização da portaria no banco de dados
-			let portariaAtualizada = await Portaria.update({
+			let portariaAtualizada = await Portaria.updateOne({
 				portariaID: updatePortaria.portariaID
 			},
 			{$set: {
@@ -355,6 +372,23 @@ app.patch('/portaria/subordinados', async (req, res) => {
 		res.status(400).send(err)
 	}
 })
+
+//Método para a propria portaria trocar sua senha
+// app.patch('/portaria/update/senha', authenticate, async (req, res) => {
+// 	let ok = await Portaria.updateOne({
+// 		portariaID: req.body.portariaID
+// 	},{
+// 		$set: {
+// 			senha: req.body.senha
+// 		}
+// 	}).save()
+// 	if(!ok){
+// 		res.status(400).send(ok)
+// 	}
+// 	else{
+// 		res.send(ok)
+// 	}
+// })
 
 app.listen(port, () => {
 	console.log(`O app está escutando na porta ${port}!`)
