@@ -21,18 +21,6 @@ let PortariaSchema = mongoose.Schema({
 	subordinados: [{
 		type: String
 	}],
-	tokens: [{	//existe apenas no mongoose(NoSQL)
-		access: {
-			type: String,
-			required: true
-		},
-		token: {
-			type: String,
-			required: true
-		}
-	}]
-	
-	/*
 	estado: {
 		type: String,
 		minlength: 2,
@@ -47,6 +35,25 @@ let PortariaSchema = mongoose.Schema({
 		type: String,
 		required: true
 	},
+	rua:{
+		type: String,
+		required: true
+	},
+	numero: {
+		type: String,
+		required: true
+	},
+	tokens: [{	//existe apenas no mongoose(NoSQL)
+		access: {
+			type: String,
+			required: true
+		},
+		token: {
+			type: String,
+			required: true
+		}
+	}]
+	/*
 	portaria: {
 		nome: {
 			type: String,

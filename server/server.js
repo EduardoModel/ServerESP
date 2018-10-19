@@ -247,7 +247,12 @@ app.post('/portariagenesis', async (req, res) => {
 			if(pass === process.env.PASS){
 				let portaria = new Portaria({
 					portariaID: process.env.PORTARIAGENESIS,
-					senha: req.body.senha
+					senha: req.body.senha,
+					estado: "XX",
+					cidade: "XXXX",
+					bairro: "XXXXXX",
+					rua: "XXXXXX",
+					numero: "XXXX"
 				})
 				let genesis = await portaria.save()
 				res.send({portariaID: genesis.portariaID})
@@ -270,7 +275,7 @@ app.post('/portaria', async (req, res) => {
 	try{
 		let accessToken = req.header('x-auth')
 		if(await verificaGenesis(accessToken)){
-			let body = _.pick(req.body, ['portariaID', 'senha', 'subordinados'])
+			let body = _.pick(req.body, ['portariaID', 'senha', 'subordinados', 'estado', 'cidade', 'bairro', 'rua', 'numero'])
 			//Se não existir a portaria com o id fornecido, cria ela
 			if(!await Portaria.findOne({
 				portariaID: body.portariaID
@@ -278,7 +283,15 @@ app.post('/portaria', async (req, res) => {
 				//O objeto body é gerado contendo os campos portariaID e senha atrelados aos respectivos valores passados na requisição
 				let portaria = new Portaria(body)
 				await portaria.save()
-				res.send({portariaID: portaria.portariaID, subordinados: portaria.subordinados})
+				res.send({
+					portariaID: portaria.portariaID,
+					subordinados: portaria.subordinados,
+					estado: portaria.estado,
+					cidade: portaria.cidade,
+					bairro: portaria.bairro,
+					rua: portaria.rua,
+					numero: portaria.numero
+				})
 			}
 			else{
 				throw "Não foi possível criar a portaria. Portaria já existente!"
@@ -294,15 +307,23 @@ app.post('/portaria', async (req, res) => {
 })
 
 //Método para retornar todas as portarias para a genesis
-app.get('/portarias', async (req,res) => {
+app.post('/portarias', async (req,res) => {
 	try{
 		let accessToken = req.header('x-auth')
 		if(await verificaGenesis(accessToken)){
-			let portarias = await Portaria.find({}).lean()
+			let body = _.pick(req.body, ['estado', 'cidade', 'bairro', 'rua', 'numero'])
+			let portarias = await Portaria.find(
+				body
+			).lean()
 			let portariasEnviar = portarias.map((portaria) => {
 				return {
 					portariaID: portaria.portariaID,
-					subordinados: portaria.subordinados
+					subordinados: portaria.subordinados,
+					estado: portaria.estado,
+					cidade: portaria.cidade,
+					bairro: portaria.bairro,
+					rua: portaria.rua,
+					numero: portaria.numero
 				}
 			})
 			res.send(portariasEnviar)
