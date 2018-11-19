@@ -52,24 +52,7 @@ let PortariaSchema = mongoose.Schema({
 			type: String,
 			required: true
 		}
-	}]
-	/*
-	portaria: {
-		nome: {
-			type: String,
-			required: true
-		},
-		numero:{
-			type: Number,
-			required: true
-		},
-		ID:{
-			type: String,
-			minlength: 3,
-			maxlength: 3,
-			required: true
-		}
-	},
+	}],
 	latitude: {
 		type: Number,
 		required: true
@@ -78,7 +61,6 @@ let PortariaSchema = mongoose.Schema({
 		type: Number,
 		required: true
 	}
-	*/
 })
 
 PortariaSchema.methods.toJSON = function() {

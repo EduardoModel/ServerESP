@@ -1,6 +1,15 @@
 require('./config/config.js')
 
 const schedule = require('node-schedule')
+const NodeGeocoder = require('node-geocoder');
+ 
+const options = {
+  provider: 'here',
+  appId: process.env.APP_ID,
+  appCode: process.env.APP_CODE
+};
+
+const geocoder = NodeGeocoder(options);
 
 const _ = require('lodash')
 const bodyParser = require('body-parser')
@@ -277,6 +286,15 @@ app.post('/portaria', async (req, res) => {
 		if(await verificaGenesis(accessToken)){
 			let body = _.pick(req.body, ['portariaID', 'senha', 'subordinados', 'estado', 'cidade', 'bairro', 'rua', 'numero'])
 			//Se não existir a portaria com o id fornecido, cria ela
+			//adiciona os campos de latitude e longitude
+			try{
+				resposta = await geocoder.geocode({address: body.estado + " " + body.cidade + " " + body.rua + " " + body.numero})
+				body.latitude = resposta[0].latitude
+				body.longitude = resposta[0].longitude
+			}
+			catch(err){
+				throw err
+			}
 			if(!await Portaria.findOne({
 				portariaID: body.portariaID
 			})){
@@ -420,3 +438,4 @@ module.exports = {
 }
 
 // ./mongod --dbpath ~/mongo-data ->  pra iniciar o database
+// portariaID:001 qtd tokens:544
