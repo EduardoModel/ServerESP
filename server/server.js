@@ -151,7 +151,8 @@ app.post('/acionamento', authenticate, async (req, res) => {
 	log = new Log({
 		portariaID: req.body.portariaID,
 		createdAt: moment().valueOf(),
-		evento: evento
+		evento: evento,
+		direcao: req.body.direcao ? req.body.direcao : ''
 	})
 	res.send(await log.save())
 })
