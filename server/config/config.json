@@ -5,8 +5,8 @@
 		"JWT_SECRET": "RMGha3nzdw01PSPvpj6L",
 		"PORTARIAGENESIS": "000",
 		"PASS": "ximira",
-		"APP_ID" : "---",
-		"APP_CODE": "---"
+		"APP_ID" : "in6Wv9rIXQfYm7nyS6mq",
+		"APP_CODE": "2foXYF2AkQZ-nRc0XtL9Sg"
 	},
 	"development": {
 		"PORT": 3000,
@@ -14,7 +14,7 @@
 		"JWT_SECRET": "Z6wQHQj1Nxq7WbGG9Bke",
 		"PORTARIAGENESIS": "000",
 		"PASS": "ximira",
-		"APP_ID" : "---",
-		"APP_CODE": "---"
+		"APP_ID" : "in6Wv9rIXQfYm7nyS6mq",
+		"APP_CODE": "2foXYF2AkQZ-nRc0XtL9Sg"
 	}
 }

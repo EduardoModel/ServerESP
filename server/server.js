@@ -144,6 +144,9 @@ app.post('/acionamento', authenticate, async (req, res) => {
 	}//3 é pro giroled enviar um ack pra comprovar o recebimento da ordem
 	else if(req.body.evento === 3){
 		evento = 'Ack'
+	}//4 é pra sinalizar Pânico
+	else if(req.body.evento === 4){
+		evento = 'P'
 	}
 	log = new Log({
 		portariaID: req.body.portariaID,
@@ -193,6 +196,36 @@ app.get('/ocorrencia', authenticate, async (req, res) => {
 			evento: "D",
 			createdAt: { $gt: moment().subtract({seconds: 30})}
 		}).lean()
+		//Busca pelas portarias existentes
+		let portarias = await Portaria.find({}).lean()
+		//Filtra os acionamentos das portarias
+		filtraAcionamento(logsLigados, logsDesligados, portarias, (logsFormatados) => {
+			res.send(logsFormatados)
+		})
+	}
+	catch(err){
+		res.status(400).send(err)
+	}
+})
+
+//PANICO
+//método que mostra quais portarias ligaram o botão de pânico
+app.get('/panico', authenticate, async (req, res) => {
+	try{
+		//Busca os Logs de ligamento dos ultimos 30 segundos
+		let logsLigados = await Log.find({
+			evento: "P",
+			createdAt: { $gt: moment().subtract({seconds: 30})}
+		}).lean()
+		//Busca os Logs de desligamento dos ultuimos 30 segundos
+		let logsDesligados = await Log.find({
+			evento: "D",
+			createdAt: { $gt: moment().subtract({seconds: 30})}
+		}).lean()
+		//Retira os desligamentos das portarias que ligaram o pânico
+		logsLigados.forEach((logLigado) => {
+			logsDesligados = logsDesligados.filter((logDesligado) => logDesligado.portariaID !== logLigado.portariaID)
+		})
 		//Busca pelas portarias existentes
 		let portarias = await Portaria.find({}).lean()
 		//Filtra os acionamentos das portarias
@@ -261,7 +294,9 @@ app.post('/portariagenesis', async (req, res) => {
 					cidade: "XXXX",
 					bairro: "XXXXXX",
 					rua: "XXXXXX",
-					numero: "XXXX"
+					numero: "XXXX",
+					latitude: 00,
+					longitude: 00
 				})
 				let genesis = await portaria.save()
 				res.send({portariaID: genesis.portariaID})
