@@ -19,7 +19,16 @@ let PortariaSchema = mongoose.Schema({
 		minlength: 6
 	},
 	subordinados: [{
-		type: String
+		portariaID:{
+			type: String,
+			minlength: 3,
+			maxlength: 3
+		},
+		posicao: {
+			type: String,
+			minlength: 1,
+			maxlength: 1
+		}
 	}],
 	estado: {
 		type: String,

@@ -28,6 +28,12 @@ const app = express()
 
 app.use(bodyParser.json())
 
+app.use(function(req, res, next) {
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	next();
+  });
+
 const port = process.env.PORT
 
 
@@ -37,6 +43,67 @@ const formatDate = (timestamp) => {
 	return moment(timestamp).utcOffset(-3).format('HH:mm:ss, DD/MM/YYYY')
 }
 
+// //Método para filtrar os acionamentos dos giroleds, evitando redundâncias
+// //e selecionando os eventos que foram acionados
+// const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => {
+// 	let logsLigadosUnicos = []
+// 	//1ª Iteração no vetor de logs de desligamento para filtrar os logs ligados
+// 	//Para tirar as portarias que se auto-desligaram
+// 	logsDesligados.forEach((logDesligado) => {
+// 		logsLigados = logsLigados.filter((logLigado) => {
+// 			return logLigado.portariaID !== logDesligado.portariaID
+// 			|| logLigado.createdAt.valueOf() > logDesligado.createdAt.valueOf()
+// 		})
+// 	})
+
+// 	//Adiciona todos os logs que estão ligados
+// 	logsLigados.forEach((logLigado) => {
+// 		//Desta forma deixa que apenas um log fique armazenado
+// 		if(!logsLigadosUnicos.some(logLigadoUnico => logLigadoUnico.portariaID === logLigado.portariaID)){
+// 			logsLigadosUnicos.push({
+// 				portariaID: logLigado.portariaID,
+// 				createdAt: logLigado.createdAt
+// 			})
+// 		}
+// 	})
+
+// 	//Nesse vetor vai ser expandido os subordinados dos ligados formatados
+// 	let logsUnicos = logsLigadosUnicos
+
+// 	logsLigadosUnicos.forEach((logLigadoUnico) => {
+// 		//Busca a portaria pelo id do log ligado
+// 		let portaria = portarias.filter(portaria => portaria.portariaID === logLigadoUnico.portariaID)
+// 		portaria[0].subordinados.forEach((subordinado) => {
+// 			if(!logsUnicos.some(logUnico => logUnico.portariaID === subordinado)){
+// 				logsUnicos.push({
+// 					portariaID: subordinado,
+// 					createdAt: logLigadoUnico.createdAt
+// 				})
+// 			}
+// 		})
+// 	})
+
+// 	//2ª Iteração no vetor de logs de desligamento para filtrar os logs ligados expandidos em seus subordinados
+// 	logsDesligados.forEach((logDesligado) => {
+// 		logsUnicos = logsUnicos.filter((logUnico) => {
+// 			return logUnico.portariaID !== logDesligado.portariaID
+// 			|| logUnico.createdAt.valueOf() > logDesligado.createdAt.valueOf()
+// 		})
+// 	})
+
+// 	let logsFormatados = []
+
+// 	logsUnicos.forEach((logUnico) => {
+// 		logsFormatados.push({
+// 			portariaID: logUnico.portariaID,
+// 			data: formatDate(logUnico.createdAt)
+// 		})
+// 	})
+
+// 	callback(logsFormatados)
+// }
+
+//Versão com as direções integradas
 //Método para filtrar os acionamentos dos giroleds, evitando redundâncias
 //e selecionando os eventos que foram acionados
 const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => {
@@ -56,7 +123,8 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 		if(!logsLigadosUnicos.some(logLigadoUnico => logLigadoUnico.portariaID === logLigado.portariaID)){
 			logsLigadosUnicos.push({
 				portariaID: logLigado.portariaID,
-				createdAt: logLigado.createdAt
+				createdAt: logLigado.createdAt,
+				direcao: logLigado.direcao
 			})
 		}
 	})
@@ -68,29 +136,45 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 		//Busca a portaria pelo id do log ligado
 		let portaria = portarias.filter(portaria => portaria.portariaID === logLigadoUnico.portariaID)
 		portaria[0].subordinados.forEach((subordinado) => {
-			if(!logsUnicos.some(logUnico => logUnico.portariaID === subordinado)){
+			if(!logsUnicos.some(logUnico => logUnico.portariaID === subordinado.portariaID)){
+				let status
+				if(logLigadoUnico.direcao === 'X'){
+					status = 0
+				}
+				else if(subordinado.posicao === 'D' && logLigadoUnico.direcao === 'D'){
+					status = 1
+				}
+				else if(subordinado.posicao === 'E' && logLigadoUnico.direcao === 'E'){
+					status = 1
+				}
+				else{
+					status = 2
+				}
 				logsUnicos.push({
-					portariaID: subordinado,
-					createdAt: logLigadoUnico.createdAt
+					portariaID: subordinado.portariaID,
+					createdAt: logLigadoUnico.createdAt,
+					status
 				})
 			}
 		})
 	})
 
-	//2ª Iteração no vetor de logs de desligamento para filtrar os logs ligados expandidos em seus subordinados
-	logsDesligados.forEach((logDesligado) => {
-		logsUnicos = logsUnicos.filter((logUnico) => {
-			return logUnico.portariaID !== logDesligado.portariaID
-			|| logUnico.createdAt.valueOf() > logDesligado.createdAt.valueOf()
-		})
-	})
+	// //2ª Iteração no vetor de logs de desligamento para filtrar os logs ligados expandidos em seus subordinados
+	// logsDesligados.forEach((logDesligado) => {
+	// 	logsUnicos = logsUnicos.filter((logUnico) => {
+	// 		return logUnico.portariaID !== logDesligado.portariaID
+	// 		|| logUnico.createdAt.valueOf() > logDesligado.createdAt.valueOf()
+	// 	})
+	// })
 
 	let logsFormatados = []
 
 	logsUnicos.forEach((logUnico) => {
 		logsFormatados.push({
 			portariaID: logUnico.portariaID,
-			data: formatDate(logUnico.createdAt)
+			data: formatDate(logUnico.createdAt),
+			status: logUnico.status, 
+			createdAt: logUnico.createdAt
 		})
 	})
 
@@ -147,12 +231,20 @@ app.post('/acionamento', authenticate, async (req, res) => {
 	}//4 é pra sinalizar Pânico
 	else if(req.body.evento === 4){
 		evento = 'P'
+	}//5 é pra atualizar a suspeita ou a ocorrência
+	else if(req.body.evento === 5){
+		log = await Log.updateOne(
+			{createdAt: req.body.createdAt},
+			{ $set: {direcao: req.body.direcao}}
+		)
+		res.send('Okk')
+		return
 	}
 	log = new Log({
 		portariaID: req.body.portariaID,
 		createdAt: moment().valueOf(),
 		evento: evento,
-		direcao: req.body.direcao ? req.body.direcao : ''
+		direcao: req.body.direcao ? req.body.direcao : 'X'
 	})
 	res.send(await log.save())
 })
