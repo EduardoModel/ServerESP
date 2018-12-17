@@ -29,7 +29,9 @@ const app = express()
 
 app.use(bodyParser.json())
 
-app.use(cors())
+app.use(cors({
+	exposedHeaders: ['x-auth', 'Content-Length']
+}))
 
 const port = process.env.PORT
 
