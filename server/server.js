@@ -172,7 +172,7 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 		logsFormatados.push({
 			portariaID: logUnico.portariaID,
 			data: formatDate(logUnico.createdAt),
-			status: logUnico.status, 
+			status: logUnico.status || 0, 
 			createdAt: logUnico.createdAt
 		})
 	})
@@ -232,6 +232,9 @@ app.post('/acionamento', authenticate, async (req, res) => {
 		evento = 'P'
 	}//5 é pra atualizar a suspeita ou a ocorrência
 	else if(req.body.evento === 5){
+		if(typeof req.body.createdAt === 'string'){
+			req.body.createdAt = parseInt(req.body.createdAt)
+		}
 		log = await Log.updateOne(
 			{createdAt: req.body.createdAt},
 			{ $set: {direcao: req.body.direcao}}
