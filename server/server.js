@@ -241,7 +241,7 @@ app.post('/acionamento', authenticate, async (req, res) => {
 		log = await Log.updateOne(
 			{createdAt: req.body.createdAt},
 			{ $set: {direcao: req.body.direcao,
-					ameaca: req.body.ameaca}}
+					ameaca: req.body.ameaca ? req.body.ameaca : 'X' }}
 		)
 		//res.send('Okk')
 		res.send(log)
