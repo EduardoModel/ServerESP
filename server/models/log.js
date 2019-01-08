@@ -18,7 +18,12 @@ let Log = mongoose.model('Log', {
 		required: true
 	},
 	direcao:{	//Para especificar a direção do evento; ex.: esquerda, direita, etc...
-		type: String
+		type: String,
+		default: 'X'
+	},
+	ameaca:{
+		type: String,
+		default: "X"
 	}
 	/*, O modo agora será especificado pelo corpo do método POST realizado na url /ligados
 	mode: {

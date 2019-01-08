@@ -123,7 +123,8 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 			logsLigadosUnicos.push({
 				portariaID: logLigado.portariaID,
 				createdAt: logLigado.createdAt,
-				direcao: logLigado.direcao
+				direcao: logLigado.direcao,
+				ameaca: logLigado.ameaca ? logLigado.ameaca : 'X' 
 			})
 		}
 	})
@@ -152,7 +153,8 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 				logsUnicos.push({
 					portariaID: subordinado.portariaID,
 					createdAt: logLigadoUnico.createdAt,
-					status
+					status,
+					ameaca: logLigadoUnico.ameaca
 				})
 			}
 		})
@@ -173,7 +175,8 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 			portariaID: logUnico.portariaID,
 			data: formatDate(logUnico.createdAt),
 			status: logUnico.status || 0, 
-			createdAt: logUnico.createdAt
+			createdAt: logUnico.createdAt,
+			ameaca: logUnico.ameaca
 		})
 	})
 
@@ -237,16 +240,17 @@ app.post('/acionamento', authenticate, async (req, res) => {
 		}
 		log = await Log.updateOne(
 			{createdAt: req.body.createdAt},
-			{ $set: {direcao: req.body.direcao}}
+			{ $set: {direcao: req.body.direcao,
+					ameaca: req.body.ameaca}}
 		)
-		res.send('Okk')
+		//res.send('Okk')
+		res.send(log)
 		return
 	}
 	log = new Log({
 		portariaID: req.body.portariaID,
 		createdAt: moment().valueOf(),
-		evento: evento,
-		direcao: req.body.direcao ? req.body.direcao : 'X'
+		evento: evento
 	})
 	res.send(await log.save())
 })
