@@ -353,6 +353,23 @@ app.get('/panico', authenticate, async (req, res) => {
 // 	}
 // })
 
+app.post('/dadosportaria', authenticate, async (req,res) => {
+	try{
+		let portariaBuscada = await Portaria.find({
+			portariaID: req.body.portariaBuscada
+		}).lean()
+
+		let endereco = portariaBuscada[0].cidade + ', '+ portariaBuscada[0].estado + ', ' + portariaBuscada[0].rua + ' Nº: ' + portariaBuscada[0].numero +
+		', ' + portariaBuscada[0].bairro + '. Telefone: ' + portariaBuscada[0].telefone
+
+		res.send({
+			endereco
+		})
+	}catch(err){
+		res.status(400).send(err)
+	}
+})
+
 //Método para pegar todos os logs
 app.get('/alllogs', async (req, res) => {
 	try{

@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken')
 const _ = require('lodash')
 const bcrypt = require('bcryptjs')
 
-
 //define o corpo dos objetos que serão armazenados dentro da coleção
 let PortariaSchema = mongoose.Schema({
 	portariaID: {
@@ -51,6 +50,9 @@ let PortariaSchema = mongoose.Schema({
 	numero: {
 		type: String,
 		required: true
+	},
+	telefone: {
+		type: String
 	},
 	tokens: [{	//existe apenas no mongoose(NoSQL)
 		access: {
