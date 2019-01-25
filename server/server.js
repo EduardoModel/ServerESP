@@ -41,7 +41,7 @@ const port = process.env.PORT
 const formatDate = (timestamp) => {
 	return moment(timestamp).utcOffset(-3).format('HH:mm:ss, DD/MM/YYYY')
 }
-
+/*
 // //Método para filtrar os acionamentos dos giroleds, evitando redundâncias
 // //e selecionando os eventos que foram acionados
 // const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => {
@@ -101,7 +101,7 @@ const formatDate = (timestamp) => {
 
 // 	callback(logsFormatados)
 // }
-
+*/
 //Versão com as direções integradas
 //Método para filtrar os acionamentos dos giroleds, evitando redundâncias
 //e selecionando os eventos que foram acionados
@@ -124,7 +124,8 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 				portariaID: logLigado.portariaID,
 				createdAt: logLigado.createdAt,
 				direcao: logLigado.direcao,
-				ameaca: logLigado.ameaca ? logLigado.ameaca : 'X' 
+				ameaca: logLigado.ameaca ? logLigado.ameaca : 'X',
+				criador: logLigado.portariaID
 			})
 		}
 	})
@@ -154,7 +155,8 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 					portariaID: subordinado.portariaID,
 					createdAt: logLigadoUnico.createdAt,
 					status,
-					ameaca: logLigadoUnico.ameaca
+					ameaca: logLigadoUnico.ameaca,
+					criador: logLigadoUnico.criador
 				})
 			}
 		})
@@ -176,7 +178,8 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 			data: formatDate(logUnico.createdAt),
 			status: logUnico.status || 0, 
 			createdAt: logUnico.createdAt,
-			ameaca: logUnico.ameaca
+			ameaca: logUnico.ameaca,
+			criador: logUnico.criador
 		})
 	})
 
