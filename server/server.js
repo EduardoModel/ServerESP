@@ -363,7 +363,7 @@ app.post('/dadosportaria', authenticate, async (req,res) => {
 		}).lean()
 
 		let endereco = portariaBuscada[0].cidade + ', '+ portariaBuscada[0].estado + ', ' + portariaBuscada[0].rua + ' Nº: ' + portariaBuscada[0].numero +
-		', ' + portariaBuscada[0].bairro + '. Telefone: ' + portariaBuscada[0].telefone
+		', ' + portariaBuscada[0].bairro + ', Telefone: ' + portariaBuscada[0].telefone
 
 		res.send({
 			endereco
