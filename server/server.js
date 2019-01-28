@@ -177,7 +177,6 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 			portariaID: logUnico.portariaID,
 			data: formatDate(logUnico.createdAt),
 			status: logUnico.status || 0, 
-			createdAt: logUnico.createdAt,
 			ameaca: logUnico.ameaca,
 			criador: logUnico.criador
 		})
