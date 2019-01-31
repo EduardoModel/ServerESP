@@ -162,13 +162,13 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 		})
 	})
 
-	// //2ª Iteração no vetor de logs de desligamento para filtrar os logs ligados expandidos em seus subordinados
-	// logsDesligados.forEach((logDesligado) => {
-	// 	logsUnicos = logsUnicos.filter((logUnico) => {
-	// 		return logUnico.portariaID !== logDesligado.portariaID
-	// 		|| logUnico.createdAt.valueOf() > logDesligado.createdAt.valueOf()
-	// 	})
-	// })
+	//2ª Iteração no vetor de logs de desligamento para filtrar os logs ligados expandidos em seus subordinados
+	logsDesligados.forEach((logDesligado) => {
+		logsUnicos = logsUnicos.filter((logUnico) => {
+			return logUnico.portariaID !== logDesligado.portariaID
+			|| logUnico.createdAt.valueOf() > logDesligado.createdAt.valueOf()
+		})
+	})
 
 	let logsFormatados = []
 
@@ -243,7 +243,7 @@ app.post('/acionamento', authenticate, async (req, res) => {
 		}
 		log = await Log.updateOne(
 			{createdAt: req.body.createdAt},
-			{ $set: {direcao: req.body.direcao,
+			{ $set: {direcao: req.body.direcao? req.body.direcao : 'X',
 					ameaca: req.body.ameaca ? req.body.ameaca : 'X' }}
 		)
 		//res.send('Okk')
