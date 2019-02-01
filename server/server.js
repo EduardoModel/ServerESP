@@ -35,7 +35,6 @@ app.use(cors({
 
 const port = process.env.PORT
 
-
 //Funções internas do servidor
 //Método para formatar a data no formato HH:MM:SS, DD/MM/AAAA
 const formatDate = (timestamp) => {
@@ -142,10 +141,7 @@ const filtraAcionamento = (logsLigados, logsDesligados, portarias, callback) => 
 				if(logLigadoUnico.direcao === 'X'){
 					status = 0
 				}
-				else if(subordinado.posicao === 'D' && logLigadoUnico.direcao === 'D'){
-					status = 1
-				}
-				else if(subordinado.posicao === 'E' && logLigadoUnico.direcao === 'E'){
+				else if((subordinado.posicao === 'D' && logLigadoUnico.direcao === 'D') ||  (subordinado.posicao === 'E' && logLigadoUnico.direcao === 'E')){
 					status = 1
 				}
 				else{
@@ -243,7 +239,7 @@ app.post('/acionamento', authenticate, async (req, res) => {
 		}
 		log = await Log.updateOne(
 			{createdAt: req.body.createdAt},
-			{ $set: {direcao: req.body.direcao? req.body.direcao : 'X',
+			{ $set: {direcao: req.body.direcao ? req.body.direcao : 'X',
 					ameaca: req.body.ameaca ? req.body.ameaca : 'X' }}
 		)
 		//res.send('Okk')
@@ -257,6 +253,14 @@ app.post('/acionamento', authenticate, async (req, res) => {
 	})
 	res.send(await log.save())
 })
+
+
+/*
+Códigos ameaças:
+1 - A pé
+2 - Bicicleta
+3 - Moto
+*/
 
 //SUSPEITA
 //método que mostra quais portarias ligaram as suspeitas
@@ -505,6 +509,48 @@ app.post('/portarias', async (req,res) => {
 		}
 	}catch(err){
 		res.status(400).send(err)
+	}
+})
+
+app.post('/acionamentos', async (req,res) => {
+	try{
+		let accessToken = req.header('x-auth')
+		if(await verificaGenesis(accessToken)){
+			let body = _.pick(req.body, ['estado', 'cidade', 'bairro', 'rua', 'numero', 'portariaID'])
+			let portarias = await Portaria.find(
+				body
+			).lean()
+			let portariasIDs = portarias.map((portaria) => portaria.portariaID)
+			try{
+				let logs = []
+				let counter = 0
+				portariasIDs.forEach(async (portariaID) => {
+					let acionamentos = await Log.find({
+						portariaID
+					}).lean()
+					let panico = acionamentos.filter((acionamento) => acionamento.evento === 'P')
+					let suspeita = acionamentos.filter((acionamento) => acionamento.evento === 'S')
+					let ocorrencia = acionamentos.filter((acionamento) => acionamento.evento === 'O')
+					let log = {
+						portariaID,
+						panico,
+						suspeita,
+						ocorrencia
+					}
+					counter++
+					logs.push(log)
+					console.log(counter)
+					if(counter === portariasIDs.length){
+						res.send(logs)
+					}
+				})
+			}
+			catch(e){
+				res.status(400).send(e)
+			}
+		}
+	}catch(e){
+		res.status(400).send(e)
 	}
 })
 
