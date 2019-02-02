@@ -499,7 +499,8 @@ app.post('/portarias', async (req,res) => {
 					cidade: portaria.cidade,
 					bairro: portaria.bairro,
 					rua: portaria.rua,
-					numero: portaria.numero
+					numero: portaria.numero,
+					telefone: portaria.telefone
 				}
 			})
 			res.send(portariasEnviar)
