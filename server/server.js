@@ -388,7 +388,9 @@ app.get('/alllogs', async (req, res) => {
 				return {
 					portariaID: log.portariaID,
 					data: formatDate(log.createdAt),
-					evento: log.evento 
+					evento: log.evento,
+					direcao: log.direcao,
+					ameaca: log.ameaca
 				}
 			})
 			res.send(logsEnviar)
