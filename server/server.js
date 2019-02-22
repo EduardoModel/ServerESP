@@ -444,7 +444,7 @@ app.post('/portaria', async (req, res) => {
 	try{
 		let accessToken = req.header('x-auth')
 		if(await verificaGenesis(accessToken)){
-			let body = _.pick(req.body, ['portariaID', 'senha', 'subordinados', 'estado', 'cidade', 'bairro', 'rua', 'numero'])
+			let body = _.pick(req.body, ['portariaID', 'senha', 'subordinados', 'estado', 'cidade', 'bairro', 'rua', 'numero', 'telefone'])
 			//Se não existir a portaria com o id fornecido, cria ela
 			//adiciona os campos de latitude e longitude
 			try{
@@ -468,7 +468,8 @@ app.post('/portaria', async (req, res) => {
 					cidade: portaria.cidade,
 					bairro: portaria.bairro,
 					rua: portaria.rua,
-					numero: portaria.numero
+					numero: portaria.numero,
+					telefone: portaria.telefone
 				})
 			}
 			else{
