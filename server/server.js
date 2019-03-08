@@ -239,7 +239,13 @@ app.post('/acionamento', authenticate, async (req, res) => {
 		}
 		log = await Log.updateOne(
 			{createdAt: req.body.createdAt},
-			{ $set: {direcao: req.body.direcao ? req.body.direcao : 'X',
+			{ $set: {direcao: req.body.direcao ? req.body.direcao : 'X', //Direita (D) ou Esquerda (E)
+					/*
+					Códigos de ameaças:
+					1 - A pé
+					2 - Bicicleta
+					3 - Moto
+					*/
 					ameaca: req.body.ameaca ? req.body.ameaca : 'X' }}
 		)
 		//res.send('Okk')
@@ -255,12 +261,7 @@ app.post('/acionamento', authenticate, async (req, res) => {
 })
 
 
-/*
-Códigos ameaças:
-1 - A pé
-2 - Bicicleta
-3 - Moto
-*/
+
 
 //SUSPEITA
 //método que mostra quais portarias ligaram as suspeitas
@@ -516,6 +517,7 @@ app.post('/portarias', async (req,res) => {
 	}
 })
 
+//Método para retornar os acionamentos (Logs) requisitados segundo parâmetros
 app.post('/acionamentos', async (req,res) => {
 	try{
 		let accessToken = req.header('x-auth')
