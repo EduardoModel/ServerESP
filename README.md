@@ -59,20 +59,20 @@ The body os the event log which is stored in the database is as follows:
 ## How that works
 Firstly the porter, depending on the nature of the event, informs the server via an embedded system utilizing an ESP32 the event itself. This system sends a JSON containing the field "portariaID", which is a string of three numbers because of the limitations of the ESP32, and the event, which is also a numerical string.
 
-![alt text](https://github.com/EduardoModel/ServerESP/tree/master/images/firstFlowchart.png "First Flowchart")
+![alt text](https://github.com/EduardoModel/ServerESP/blob/master/images/firstFlowchart.png "First Flowchart")
 
 Then the servers stores this log with the addition of the timestamp in the registry.
 
-![alt text](https://github.com/EduardoModel/ServerESP/tree/master/images/secondFlowchart.png "Second Flowchart")
+![alt text](https://github.com/EduardoModel/ServerESP/blob/master/images/secondFlowchart.png "Second Flowchart")
 
 After that, the server returns an ACK ("acknowledgment") to the sender informing the stored log.
 
-![alt text](https://github.com/EduardoModel/ServerESP/tree/master/images/thirdFlowchart.png "Third Flowchart")
+![alt text](https://github.com/EduardoModel/ServerESP/blob/master/images/thirdFlowchart.png "Third Flowchart")
 
 After that, if the porter would add further information, for example, the direction or the type of the threat, he informs this information on the embedded system and sends again to the server.
 
-![alt text](https://github.com/EduardoModel/ServerESP/tree/master/images/fourthFlowchart.png "Fourth Flowchart")
+![alt text](https://github.com/EduardoModel/ServerESP/blob/master/images/fourthFlowchart.png "Fourth Flowchart")
 
 The server receives the optional information and the timestamp to use as a query parameter to actualize the log.
 
-![alt text](https://github.com/EduardoModel/ServerESP/tree/master/images/fifthFlowchart.png "Fifth Flowchart")
+![alt text](https://github.com/EduardoModel/ServerESP/blob/master/images/fifthFlowchart.png "Fifth Flowchart")
