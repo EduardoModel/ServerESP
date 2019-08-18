@@ -13,15 +13,15 @@ let Log = mongoose.model('Log', {
 		default: null,	//<---  validator
 		required: true
 	},
-	evento:{ // Se é ocorrência/suspeita ...
+	evento: { // Se é ocorrência/suspeita ...
 		type: String,
 		required: true
 	},
-	direcao:{	//Para especificar a direção do evento; ex.: esquerda, direita, etc...
+	direcao: {	//Para especificar a direção do evento; ex.: esquerda, direita, etc...
 		type: String,
 		default: 'X'
 	},
-	ameaca:{
+	ameaca: {
 		type: String,
 		default: "X"
 	}
