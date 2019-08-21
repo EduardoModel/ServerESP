@@ -77,6 +77,8 @@ The server receives the optional information and the timestamp to use as a query
 
 ![alt text](https://github.com/EduardoModel/ServerESP/blob/master/images/fifthFlowchart.png "Fifth Flowchart")
 
-With this information, the server list in a specific URL every event that is happening with which ordinance. The others ordinances consulting this link to obtain information about the events, notifying the porters. These infrastructure possibilities a fluid and connected way to propagate information between the users about the happenings in the neighborhood.
+With this information, the server list in a specific URL every event that is happening with which ordinance. The others ordinances consulting this link to obtain information about the events, notifying the porters. These infrastructure possibilities a fluid and connected way to propagate information between the users about the happenings in the neighborhood and alerting when a dangerous situation is happening.
 
 This is made automatically with the embedded systems which are in the ordinances, warning the porter and the neighborhood around the buildings with light signals, similar to in the police cars.
+
+![alt text](https://github.com/EduardoModel/ServerESP/blob/master/images/sixthFlowchart.png "Sixth Flowchart")
